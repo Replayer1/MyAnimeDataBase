@@ -1,5 +1,5 @@
 const contentConteiner = document.getElementById("content-container");
-
+//Создание Крточки Аниме
 function createAinmeCard(anime) {
         let card = document.createElement("div");
         card.className = "anime-card";
@@ -18,12 +18,8 @@ function createAinmeCard(anime) {
                 <button class="btn btn--watch">Смотреть</button>
             </div>
         `;
-
-        const detailBtn = card.querySelector(".btn--detail");
-        const watchBtn = card.querySelector(".btn--watch");
-
-        
         //Кнопка "подробнее"
+        const detailBtn = card.querySelector(".btn--detail");
         detailBtn.addEventListener("click", () => {
             function slugify(title) {
             return title
@@ -41,24 +37,24 @@ function createAinmeCard(anime) {
             }
             window.open(anime.detailUrl || getShikiLink(anime), "_blank");
         });
-
         //Кнопка "смотреть"
+        const watchBtn = card.querySelector(".btn--watch");
         watchBtn.addEventListener("click", () => {
-            window.open(anime.watchUrl || "#", "_blank");
+            function getWatchLink(anime) {
+                const animeNameRu = anime.target_title_ru.replace(/\s+/g, "+");
+                return `https://www.google.com/search?q=Смотреть+аниме+${animeNameRu}`;
+            }
+            window.open(anime.watchUrl || getWatchLink(anime), "_blank");
         });
+        
         return card;
 }
 
+
 function renderAinmeCards(animeData) {
-    
     contentConteiner.innerHTML = "";
 
     animeData.forEach(anime => {
-        console.log(anime);
-        console.log(createAinmeCard(anime));
         contentConteiner.appendChild(createAinmeCard(anime));
     });
-
 };
-
-console.log(contentConteiner);
