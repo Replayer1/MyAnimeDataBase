@@ -1,10 +1,18 @@
 const contentConteiner = document.getElementById("content-container");
 //Создание Крточки Аниме
 function createAinmeCard(anime) {
-        let card = document.createElement("div");
-        card.className = "anime-card";
-        card.innerHTML = `
-            <div class="anime-card__image-wrapper">
+  let card = document.createElement("div");
+  const statusColors = {
+    completed: "#34e062",
+    watching: "#803fbc",
+    dropped: "#f44336",
+    planned: "#2196f3",
+  };
+
+  const statusColor = statusColors[anime.status] || "#999";
+  card.className = "anime-card";
+  card.innerHTML = `
+            <div class="anime-card__image-wrapper" style="border-bottom: 5px solid ${statusColor};">
                 <img src="https://shikimori.one/system/animes/original/${anime.target_id}.jpg" alt="${anime.target_title_ru}" class="anime-card__image"/>
                 <div class="anime-card__rating">⭐ ${anime.score}</div>
             </div>
@@ -18,43 +26,42 @@ function createAinmeCard(anime) {
                 <button class="btn btn--watch">Смотреть</button>
             </div>
         `;
-        //Кнопка "подробнее"
-        const detailBtn = card.querySelector(".btn--detail");
-        detailBtn.addEventListener("click", () => {
-            function slugify(title) {
-            return title
-                .toLowerCase()                // нижний регистр
-                .normalize("NFD")             // разложение диакритики
-                .replace(/[\u0300-\u036f]/g, "") // удаляем акценты
-                .replace(/[^a-z0-9\s-]/g, "")   // убираем спецсимволы
-                .trim()                       // обрезаем пробелы по краям
-                .replace(/\s+/g, "-");        // пробелы → дефисы
-            }
-            function getShikiLink(anime) {
-                const id = anime.target_id;
-                const slug = slugify(anime.target_title);
-                return `https://shiki.one/animes/${id}-${slug}`;
-            }
-            window.open(anime.detailUrl || getShikiLink(anime), "_blank");
-        });
-        //Кнопка "смотреть"
-        const watchBtn = card.querySelector(".btn--watch");
-        watchBtn.addEventListener("click", () => {
-            function getWatchLink(anime) {
-                const animeNameRu = anime.target_title_ru.replace(/\s+/g, "+");
-                return `https://www.google.com/search?q=Смотреть+аниме+${animeNameRu}`;
-            }
-            window.open(anime.watchUrl || getWatchLink(anime), "_blank");
-        });
-        
-        return card;
+  //Кнопка "подробнее"
+  const detailBtn = card.querySelector(".btn--detail");
+  detailBtn.addEventListener("click", () => {
+    function slugify(title) {
+      return title
+        .toLowerCase() // нижний регистр
+        .normalize("NFD") // разложение диакритики
+        .replace(/[\u0300-\u036f]/g, "") // удаляем акценты
+        .replace(/[^a-z0-9\s-]/g, "") // убираем спецсимволы
+        .trim() // обрезаем пробелы по краям
+        .replace(/\s+/g, "-"); // пробелы → дефисы
+    }
+    function getShikiLink(anime) {
+      const id = anime.target_id;
+      const slug = slugify(anime.target_title);
+      return `https://shiki.one/animes/${id}-${slug}`;
+    }
+    window.open(anime.detailUrl || getShikiLink(anime), "_blank");
+  });
+  //Кнопка "смотреть"
+  const watchBtn = card.querySelector(".btn--watch");
+  watchBtn.addEventListener("click", () => {
+    function getWatchLink(anime) {
+      const animeNameRu = anime.target_title_ru.replace(/\s+/g, "+");
+      return `https://www.google.com/search?q=Смотреть+аниме+${animeNameRu}`;
+    }
+    window.open(anime.watchUrl || getWatchLink(anime), "_blank");
+  });
+
+  return card;
 }
 
-
 function renderAinmeCards(animeData) {
-    contentConteiner.innerHTML = "";
+  contentConteiner.innerHTML = "";
 
-    animeData.forEach(anime => {
-        contentConteiner.appendChild(createAinmeCard(anime));
-    });
-};
+  animeData.forEach((anime) => {
+    contentConteiner.appendChild(createAinmeCard(anime));
+  });
+}
