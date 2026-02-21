@@ -7,6 +7,8 @@ const filterType = document.getElementById("filterType");
 const filterGenre = document.getElementById("filterGenre");
 const filtersResetBtn = document.getElementById("filtersResetBtn");
 
+let selectedGenres = new Set();
+
 function fillSelect(selectEl, values) {
   if (!selectEl) return;
 
@@ -30,6 +32,30 @@ function fillSelect(selectEl, values) {
 
 function uniqueValues(data, getValue) {
   return [...new Set(data.map(getValue).filter(Boolean))];
+}
+
+function renderGenreCheckboxes(genres) {
+  if (!filterGenre) return;
+
+  filterGenre.innerHTML = "";
+
+  genres.forEach((genre) => {
+    const label = document.createElement("label");
+    label.className = "filters__genre-item";
+
+    const checkbox = document.createElement("input");
+    checkbox.type = "checkbox";
+    checkbox.value = genre;
+    checkbox.name = "genre";
+    checkbox.checked = selectedGenres.has(genre);
+
+    const text = document.createElement("span");
+    text.textContent = genre;
+
+    label.appendChild(checkbox);
+    label.appendChild(text);
+    filterGenre.appendChild(label);
+  });
 }
 
 function initializeFilters(data) {
@@ -56,7 +82,7 @@ function initializeFilters(data) {
   fillSelect(filterYear, years);
   fillSelect(filterStatus, statuses);
   fillSelect(filterType, types);
-  fillSelect(filterGenre, genres);
+  renderGenreCheckboxes(genres);
 }
 
 function applyAllFilters() {
@@ -68,7 +94,7 @@ function applyAllFilters() {
   const userMin = Number.parseFloat(filterUserScore?.value);
   const selectedStatus = filterStatus?.value || "";
   const selectedType = filterType?.value || "";
-  const selectedGenre = filterGenre?.value || "";
+  const selectedGenresList = [...selectedGenres];
 
   currentList = animeData.filter((anime) => {
     const title = anime.title?.toLowerCase() || "";
@@ -92,8 +118,9 @@ function applyAllFilters() {
       !selectedStatus || anime.user_stauts === selectedStatus;
     const matchesType = !selectedType || anime.type === selectedType;
     const matchesGenre =
-      !selectedGenre ||
-      (Array.isArray(anime.genres) && anime.genres.includes(selectedGenre));
+      selectedGenresList.length === 0 ||
+      (Array.isArray(anime.genres) &&
+        selectedGenresList.some((genre) => anime.genres.includes(genre)));
 
     return (
       matchesSearch &&
@@ -140,7 +167,19 @@ if (filterType) {
 }
 
 if (filterGenre) {
-  filterGenre.addEventListener("change", applyAllFilters);
+  filterGenre.addEventListener("change", (event) => {
+    const target = event.target;
+    if (!(target instanceof HTMLInputElement)) return;
+    if (target.name !== "genre") return;
+
+    if (target.checked) {
+      selectedGenres.add(target.value);
+    } else {
+      selectedGenres.delete(target.value);
+    }
+
+    applyAllFilters();
+  });
 }
 
 if (filtersResetBtn) {
@@ -151,7 +190,14 @@ if (filtersResetBtn) {
     if (filterUserScore) filterUserScore.value = "";
     if (filterStatus) filterStatus.value = "";
     if (filterType) filterType.value = "";
-    if (filterGenre) filterGenre.value = "";
+    selectedGenres.clear();
+
+    if (filterGenre) {
+      const checkboxes = filterGenre.querySelectorAll('input[name="genre"]');
+      checkboxes.forEach((checkbox) => {
+        checkbox.checked = false;
+      });
+    }
 
     applyAllFilters();
   });

@@ -14,53 +14,89 @@
           ><h1>My<span class="header__logo-accent">ANIME</span>Database</h1></a
         >
       </div>
-      <div class="header__serch">
-        <input type="text" id="searchInput" placeholder="Поиск аниме..." />
+      <div class="header__controls">
+        <div class="header__serch">
+          <input type="text" id="searchInput" placeholder="Поиск аниме..." />
+        </div>
+        <button
+          type="button"
+          class="theme-toggle"
+          id="themeToggle"
+          aria-label="Переключить тему"
+          title="Переключить тему"
+        >
+          <span class="theme-toggle__icon" aria-hidden="true">🌙</span>
+          <span class="theme-toggle__text">Тёмная</span>
+        </button>
       </div>
     </header>
-    <section class="filters" id="filters">
-      <select id="filterYear">
-        <option value="">Год (все)</option>
-      </select>
+    <main class="page-layout">
+      <section class="content-area">
+        <section class="content" id="content-container"></section>
+        <div id="pagination"></div>
+      </section>
 
-      <input
-        type="number"
-        id="filterShikiScore"
-        min="0"
-        max="10"
-        step="0.1"
-        placeholder="Оценка Shiki от"
-      />
+      <aside class="filters-sidebar" aria-label="Фильтры">
+        <section class="filters" id="filters">
+          <h2 class="filters__title">Фильтры</h2>
 
-      <input
-        type="number"
-        id="filterUserScore"
-        min="0"
-        max="10"
-        step="1"
-        placeholder="Моя оценка от"
-      />
+          <label class="filters__field">
+            <span class="filters__label">Год</span>
+            <select id="filterYear">
+              <option value="">Все</option>
+            </select>
+          </label>
 
-      <select id="filterStatus">
-        <option value="">Статус (все)</option>
-      </select>
+          <label class="filters__field">
+            <span class="filters__label">Оценка Shiki от</span>
+            <input
+              type="number"
+              id="filterShikiScore"
+              min="0"
+              max="10"
+              step="0.1"
+              placeholder="Например: 7.5"
+            />
+          </label>
 
-      <select id="filterType">
-        <option value="">Тип (все)</option>
-      </select>
+          <label class="filters__field">
+            <span class="filters__label">Моя оценка от</span>
+            <input
+              type="number"
+              id="filterUserScore"
+              min="0"
+              max="10"
+              step="1"
+              placeholder="Например: 8"
+            />
+          </label>
 
-      <select id="filterGenre">
-        <option value="">Жанр (все)</option>
-      </select>
+          <label class="filters__field">
+            <span class="filters__label">Статус</span>
+            <select id="filterStatus">
+              <option value="">Все</option>
+            </select>
+          </label>
 
-      <button type="button" id="filtersResetBtn">Сбросить</button>
-    </section>
-    <main>
-      <section class="content" id="content-container"></section>
+          <label class="filters__field">
+            <span class="filters__label">Тип</span>
+            <select id="filterType">
+              <option value="">Все</option>
+            </select>
+          </label>
+
+          <div class="filters__field">
+            <p class="filters__label">Жанры (можно выбрать несколько)</p>
+            <div class="filters__genres" id="filterGenre"></div>
+          </div>
+
+          <button type="button" id="filtersResetBtn">Сбросить</button>
+        </section>
+      </aside>
     </main>
-    <div id="pagination"></div>
     <footer></footer>
   </body>
+  <script src="app/theme.js"></script>
   <script src="app/parse.js"></script>
   <script src="app/render.js"></script>
   <script src="app/serch.js"></script>
