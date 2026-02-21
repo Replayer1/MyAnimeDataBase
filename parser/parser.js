@@ -1,8 +1,8 @@
 import fs from "fs";
 import readline from "readline";
 
-const INPUT = "./input.json";
-const OUTPUT = "./output.json";
+const INPUT = "./result/input.json";
+const OUTPUT = "./result/output.json";
 const BASE = "https://shikimori.one/api/animes/";
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -21,28 +21,8 @@ function waitForKey() {
   });
 }
 
-async function main() {
-  const raw = fs.readFileSync(INPUT, "utf8");
-  const list = JSON.parse(raw);
-
-  const total = list.length;
-  const result = [];
-
-  let success = 0;
-  let failed = 0;
-  const failedIds = [];
-
-  console.log(`Start parsing ${total} anime...\n`);
-
-  for (let i = 0; i < total; i++) {
-    const anime = list[i];
-    const id = anime.target_id;
-
-    const progress = `${i + 1}/${total}`;
-    const percent = Math.round(((i + 1) / total) * 100);
-
-    process.stdout.write(`[${progress}] (${percent}%) Fetching ${id}... `);
-
+async function fetchWithRetry(id) {
+  while (true) {
     try {
       const res = await fetch(BASE + id, {
         headers: {
@@ -51,23 +31,61 @@ async function main() {
       });
 
       if (!res.ok) {
-        console.log(`ERROR (HTTP ${res.status})`);
-        failed++;
-        failedIds.push(id);
+        console.log(`HTTP ${res.status} — retrying...`);
+        await sleep(2000);
         continue;
       }
 
-      const data = await res.json();
+      return await res.json();
+    } catch {
+      console.log("Network error — retrying...");
+      await sleep(2000);
+    }
+  }
+}
+
+async function main() {
+  const raw = fs.readFileSync(INPUT, "utf8");
+  const list = JSON.parse(raw);
+
+  const total = list.length;
+  const result = [];
+
+  let success = 0;
+
+  console.log(`Start parsing ${total} anime...\n`);
+
+  for (let i = 0; i < total; i++) {
+    const anime = list[i];
+    const id = anime.target_id;
+    const userScore = anime.score;
+    const userStatus = anime.status;
+
+    const progress = `${i + 1}/${total}`;
+    const percent = Math.round(((i + 1) / total) * 100);
+
+    process.stdout.write(`[${progress}] (${percent}%) Fetching ${id}... `);
+
+    try {
+      const data = await fetchWithRetry(id);
 
       result.push({
         id: data.id,
         title: data.name,
         title_ru: data.russian,
-        score: data.score,
+
+        type: data.kind, // tv / movie / ova / ona / special
+
+        user_score: userScore,
+        shiki_score: data.score,
         episodes: data.episodes,
         year: data.aired_on?.slice(0, 4),
+        user_stauts: userStatus,
+
+        studios: data.studios.map((s) => s.name),
+
         poster: data.image.original,
-        genres: data.genres.map((g) => g.name),
+        genres: data.genres.map((g) => g.russian),
         description: data.description,
       });
 
@@ -79,7 +97,7 @@ async function main() {
       failedIds.push(id);
     }
 
-    await sleep(800);
+    await sleep(2000);
   }
 
   fs.writeFileSync(OUTPUT, JSON.stringify(result, null, 2));

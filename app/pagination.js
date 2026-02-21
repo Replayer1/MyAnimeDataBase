@@ -1,5 +1,5 @@
 let currentPage = 1;
-const pageSize = 12; // карточек на странице
+const pageSize = 20; // карточек на странице
 const pagination = document.getElementById("pagination");
 
 function getPage(data, page) {

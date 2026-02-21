@@ -1,7 +1,7 @@
 import fs from "fs";
 import readline from "readline";
 
-const OUTPUT = "./manual_output.json";
+const OUTPUT = "./result/manual_output.json";
 const BASE = "https://shikimori.one/api/animes/";
 
 const MANUAL_IDS = [32902];
@@ -67,7 +67,7 @@ async function main() {
         episodes: data.episodes,
         year: data.aired_on?.slice(0, 4),
         poster: data.image.original,
-        genres: data.genres.map((g) => g.name),
+        genres: data.genres.map((g) => g.russian),
         description: data.description,
       });
 

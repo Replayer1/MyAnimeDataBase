@@ -1,7 +1,7 @@
 let animeData;
 let currentList = [];
 function fetchRender() {
-  fetch("../db/shikimori_data.json")
+  fetch("../db/anime-data.json")
     .then((response) => {
       if (!response.ok) throw new Error("Ошибка загрузки JSON");
       return response.json();

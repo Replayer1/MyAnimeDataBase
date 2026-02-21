@@ -672,7 +672,7 @@
   },
   {
     "target_title": "Kamisama Hajimemashita: Kako-hen",
-    "target_title_ru": "Очень приятно, Бог 2 OVA",
+    "target_title_ru": "Очень приятно, Бог: Прошлое",
     "target_id": 30709,
     "target_type": "Anime",
     "score": 9,
@@ -3788,7 +3788,7 @@
     "target_title_ru": "Полёт ведьмы",
     "target_id": 31376,
     "target_type": "Anime",
-    "score": 0,
+    "score": 7,
     "status": "completed",
     "rewatches": 0,
     "episodes": 12,
@@ -5482,7 +5482,7 @@
     "target_title_ru": "Маленький гражданин",
     "target_id": 57810,
     "target_type": "Anime",
-    "score": 9,
+    "score": 10,
     "status": "completed",
     "rewatches": 0,
     "episodes": 10,
@@ -5493,10 +5493,10 @@
     "target_title_ru": "Маленький гражданин 2",
     "target_id": 59828,
     "target_type": "Anime",
-    "score": 0,
-    "status": "planned",
+    "score": 10,
+    "status": "completed",
     "rewatches": 0,
-    "episodes": 0,
+    "episodes": 12,
     "text": null
   },
   {
@@ -6528,7 +6528,7 @@
     "target_id": 60531,
     "target_type": "Anime",
     "score": 0,
-    "status": "watching",
+    "status": "dropped",
     "rewatches": 0,
     "episodes": 4,
     "text": null
@@ -6542,6 +6542,105 @@
     "status": "completed",
     "rewatches": 0,
     "episodes": 24,
+    "text": null
+  },
+  {
+    "target_title": "Egao no Taenai Shokuba desu.",
+    "target_title_ru": "Рабочее место, где вы не можете не улыбаться",
+    "target_id": 57859,
+    "target_type": "Anime",
+    "score": 0,
+    "status": "dropped",
+    "rewatches": 0,
+    "episodes": 0,
+    "text": null
+  },
+  {
+    "target_title": "Ranma ½ (2024) 2nd Season",
+    "target_title_ru": "Ранма 1/2 (2024) 2",
+    "target_id": 60564,
+    "target_type": "Anime",
+    "score": 8,
+    "status": "completed",
+    "rewatches": 0,
+    "episodes": 12,
+    "text": null
+  },
+  {
+    "target_title": "Ginga Tokkyuu Milky☆Subway",
+    "target_title_ru": "Галактический экспресс: Млечное метро",
+    "target_id": 61274,
+    "target_type": "Anime",
+    "score": 0,
+    "status": "planned",
+    "rewatches": 0,
+    "episodes": 0,
+    "text": null
+  },
+  {
+    "target_title": "Kaoru Hana wa Rin to Saku",
+    "target_title_ru": "Благоухающий цветок расцветает с достоинством",
+    "target_id": 59845,
+    "target_type": "Anime",
+    "score": 0,
+    "status": "planned",
+    "rewatches": 0,
+    "episodes": 0,
+    "text": null
+  },
+  {
+    "target_title": "Gachiakuta",
+    "target_title_ru": "Гатиакута",
+    "target_id": 59062,
+    "target_type": "Anime",
+    "score": 0,
+    "status": "planned",
+    "rewatches": 0,
+    "episodes": 0,
+    "text": null
+  },
+  {
+    "target_title": "New Panty \u0026 Stocking with Garterbelt",
+    "target_title_ru": "Труська, Чулко и пресвятой Подвяз 2",
+    "target_id": 52293,
+    "target_type": "Anime",
+    "score": 0,
+    "status": "planned",
+    "rewatches": 0,
+    "episodes": 0,
+    "text": null
+  },
+  {
+    "target_title": "Tondemo Skill de Isekai Hourou Meshi 2",
+    "target_title_ru": "Кулинарные скитания в параллельном мире 2",
+    "target_id": 57025,
+    "target_type": "Anime",
+    "score": 7,
+    "status": "completed",
+    "rewatches": 0,
+    "episodes": 12,
+    "text": null
+  },
+  {
+    "target_title": "Tondemo Skill de Isekai Hourou Meshi",
+    "target_title_ru": "Кулинарные скитания в параллельном мире",
+    "target_id": 53446,
+    "target_type": "Anime",
+    "score": 8,
+    "status": "completed",
+    "rewatches": 0,
+    "episodes": 12,
+    "text": null
+  },
+  {
+    "target_title": "Ikoku Nikki",
+    "target_title_ru": "Дневник разных стран",
+    "target_id": 58788,
+    "target_type": "Anime",
+    "score": 0,
+    "status": "planned",
+    "rewatches": 0,
+    "episodes": 0,
     "text": null
   }
 ]

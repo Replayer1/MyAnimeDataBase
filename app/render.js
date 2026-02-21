@@ -9,16 +9,17 @@ function createAinmeCard(anime) {
     planned: "#2196f3",
   };
 
-  const statusColor = statusColors[anime.status] || "#999";
+  const statusColor = statusColors[anime.user_stauts] || "#999";
+  const animeGaners = anime.genres.join(" | ");
   card.className = "anime-card";
   card.innerHTML = `
             <div class="anime-card__image-wrapper" style="border-bottom: 5px solid ${statusColor};">
-                <img src="https://shikimori.one/system/animes/original/${anime.target_id}.jpg" alt="${anime.target_title_ru}" class="anime-card__image"/>
-                <div class="anime-card__rating">⭐ ${anime.score}</div>
+                <img src="https://shikimori.one/system/animes/original/${anime.id}.jpg" alt="${anime.title_ru}" class="anime-card__image"/>
+                <div class="anime-card__rating">⭐ ${anime.user_score}</div>
             </div>
             <div class="anime-card__info">
-                    <h3 class="anime-card__title">${anime.target_title_ru}</h3>
-                    <p class="anime-card__type-year">${anime.target_type} · 2000</p>
+                    <h3 class="anime-card__title">${anime.title_ru}</h3></br>
+                    <p class="anime-card__type-year">${animeGaners} </br></br> ${anime.year}</p>
                     <p class="anime-card__description"></p>
             </div>
             <div class="anime-card__actions">
