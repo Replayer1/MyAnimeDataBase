@@ -1,5 +1,5 @@
 let currentPage = 1;
-const pageSize = 20; // карточек на странице
+const pageSize = 21; // карточек на странице (кратно 3 колонкам)
 const pagination = document.getElementById("pagination");
 
 function getPage(data, page) {
