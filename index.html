@@ -18,6 +18,43 @@
         <input type="text" id="searchInput" placeholder="Поиск аниме..." />
       </div>
     </header>
+    <section class="filters" id="filters">
+      <select id="filterYear">
+        <option value="">Год (все)</option>
+      </select>
+
+      <input
+        type="number"
+        id="filterShikiScore"
+        min="0"
+        max="10"
+        step="0.1"
+        placeholder="Оценка Shiki от"
+      />
+
+      <input
+        type="number"
+        id="filterUserScore"
+        min="0"
+        max="10"
+        step="1"
+        placeholder="Моя оценка от"
+      />
+
+      <select id="filterStatus">
+        <option value="">Статус (все)</option>
+      </select>
+
+      <select id="filterType">
+        <option value="">Тип (все)</option>
+      </select>
+
+      <select id="filterGenre">
+        <option value="">Жанр (все)</option>
+      </select>
+
+      <button type="button" id="filtersResetBtn">Сбросить</button>
+    </section>
     <main>
       <section class="content" id="content-container"></section>
     </main>

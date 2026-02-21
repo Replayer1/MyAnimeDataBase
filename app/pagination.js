@@ -8,8 +8,11 @@ function getPage(data, page) {
 }
 
 function renderPage(data) {
+  const totalPages = Math.max(1, Math.ceil(data.length / pageSize));
+  currentPage = Math.min(Math.max(1, currentPage), totalPages);
+
   const pageData = getPage(data, currentPage);
-  renderAinmeCards(pageData);
+  renderAnimeCards(pageData);
   renderPagination(data.length);
 }
 
@@ -17,6 +20,15 @@ function renderPagination(total) {
   pagination.innerHTML = "";
 
   const totalPages = Math.ceil(total / pageSize);
+
+  if (totalPages <= 0) {
+    const empty = document.createElement("span");
+    empty.className = "pagination-empty";
+    empty.textContent = "Ничего не найдено";
+    pagination.appendChild(empty);
+    return;
+  }
+
   const maxVisible = 8;
 
   function createBtn(label, page, disabled = false) {

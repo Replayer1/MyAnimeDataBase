@@ -1,6 +1,6 @@
 const contentConteiner = document.getElementById("content-container");
 //Создание Крточки Аниме
-function createAinmeCard(anime) {
+function createAnimeCard(anime) {
   let card = document.createElement("div");
   const statusColors = {
     completed: "#34e062",
@@ -15,7 +15,7 @@ function createAinmeCard(anime) {
   card.innerHTML = `
             <div class="anime-card__image-wrapper" style="border-bottom: 5px solid ${statusColor};">
                 <img src="https://shikimori.one/system/animes/original/${anime.id}.jpg" alt="${anime.title_ru}" class="anime-card__image"/>
-                <div class="anime-card__rating">⭐ ${anime.user_score}</div>
+                <div class="anime-card__rating">⭐ ${anime.shiki_score}</br>⭐ ${anime.user_score}</div>
             </div>
             <div class="anime-card__info">
                     <h3 class="anime-card__title">${anime.title_ru}</h3></br>
@@ -40,8 +40,8 @@ function createAinmeCard(anime) {
         .replace(/\s+/g, "-"); // пробелы → дефисы
     }
     function getShikiLink(anime) {
-      const id = anime.target_id;
-      const slug = slugify(anime.target_title);
+      const id = anime.id;
+      const slug = slugify(anime.title);
       return `https://shiki.one/animes/${id}-${slug}`;
     }
     window.open(anime.detailUrl || getShikiLink(anime), "_blank");
@@ -50,7 +50,7 @@ function createAinmeCard(anime) {
   const watchBtn = card.querySelector(".btn--watch");
   watchBtn.addEventListener("click", () => {
     function getWatchLink(anime) {
-      const animeNameRu = anime.target_title_ru.replace(/\s+/g, "+");
+      const animeNameRu = anime.title_ru.replace(/\s+/g, "+");
       return `https://www.google.com/search?q=Смотреть+аниме+${animeNameRu}`;
     }
     window.open(anime.watchUrl || getWatchLink(anime), "_blank");
@@ -59,10 +59,10 @@ function createAinmeCard(anime) {
   return card;
 }
 
-function renderAinmeCards(animeData) {
+function renderAnimeCards(animeData) {
   contentConteiner.innerHTML = "";
 
   animeData.forEach((anime) => {
-    contentConteiner.appendChild(createAinmeCard(anime));
+    contentConteiner.appendChild(createAnimeCard(anime));
   });
 }
