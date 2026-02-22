@@ -30,13 +30,20 @@
         </button>
       </div>
     </header>
+
+    <nav class="site-nav" aria-label="Навигация по разделам">
+      <a href="#" class="site-nav__link site-nav__link--active">Список аниме</a>
+      <a href="#" class="site-nav__link">Статистика</a>
+      <a href="#" class="site-nav__link">Добавить Аниме</a>
+    </nav>
+
     <main class="page-layout">
       <section class="content-area">
         <section class="content" id="content-container"></section>
         <div id="pagination"></div>
       </section>
 
-      <aside class="filters-sidebar" aria-label="Фильтры">
+      <aside class="filters-sidebar" id="filtersSidebar" aria-label="Фильтры">
         <section class="filters" id="filters">
           <h2 class="filters__title">Фильтры</h2>
 
@@ -173,6 +180,18 @@
           <button type="button" id="filtersResetBtn">Сбросить</button>
         </section>
       </aside>
+
+      <button
+        type="button"
+        class="filters-toggle"
+        id="filtersToggle"
+        aria-controls="filtersSidebar"
+        aria-expanded="false"
+        aria-label="Открыть фильтры"
+        title="Фильтры"
+      >
+        ◀
+      </button>
     </main>
     <footer></footer>
   </body>

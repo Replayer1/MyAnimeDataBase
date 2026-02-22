@@ -20,6 +20,13 @@ function fetchRender() {
         renderPage(currentList);
       }
     })
-    .catch((err) => console.error(err));
+    .catch((err) => {
+      console.error(err);
+      const contentContainer = document.getElementById("content-container");
+      if (contentContainer) {
+        contentContainer.innerHTML =
+          '<p class="load-error-message">Не удалось загрузить данные. Обновите страницу и попробуйте снова.</p>';
+      }
+    });
 }
 fetchRender();

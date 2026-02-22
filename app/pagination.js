@@ -1,5 +1,5 @@
 let currentPage = 1;
-const pageSize = 21; // карточек на странице (кратно 3 колонкам)
+const pageSize = 20; // карточек на странице
 const pagination = document.getElementById("pagination");
 
 function getPage(data, page) {
@@ -29,7 +29,8 @@ function renderPagination(total) {
     return;
   }
 
-  const maxVisible = 8;
+  const width = window.innerWidth;
+  const maxVisible = width <= 480 ? 4 : width <= 900 ? 6 : 8;
 
   function createBtn(label, page, disabled = false) {
     const btn = document.createElement("button");

@@ -30,8 +30,22 @@ const filterStatus = document.getElementById("filterStatus");
 const filterType = document.getElementById("filterType");
 const filterGenre = document.getElementById("filterGenre");
 const filtersResetBtn = document.getElementById("filtersResetBtn");
+const filtersToggle = document.getElementById("filtersToggle");
 
 let selectedGenres = new Set();
+
+function setFiltersPanelState(isOpen) {
+  document.body.classList.toggle("filters-open", isOpen);
+
+  if (!filtersToggle) return;
+
+  filtersToggle.setAttribute("aria-expanded", String(isOpen));
+  filtersToggle.setAttribute(
+    "aria-label",
+    isOpen ? "Скрыть фильтры" : "Открыть фильтры",
+  );
+  filtersToggle.textContent = isOpen ? "▶" : "◀";
+}
 
 function syncRangeValues(
   fromEl,
@@ -278,8 +292,21 @@ function applyAllFilters() {
   }
 }
 
+function debounce(callback, delay) {
+  let timeoutId;
+
+  return function (...args) {
+    clearTimeout(timeoutId);
+    timeoutId = setTimeout(() => {
+      callback.apply(this, args);
+    }, delay);
+  };
+}
+
+const debouncedApplyAllFilters = debounce(applyAllFilters, 150);
+
 if (searchInput) {
-  searchInput.addEventListener("input", applyAllFilters);
+  searchInput.addEventListener("input", debouncedApplyAllFilters);
 }
 
 if (filterYearFrom) {
@@ -381,3 +408,12 @@ if (filtersResetBtn) {
 syncYearRange("from");
 syncShikiRange("from");
 syncUserRange("from");
+
+if (filtersToggle) {
+  setFiltersPanelState(false);
+
+  filtersToggle.addEventListener("click", () => {
+    const isOpen = document.body.classList.contains("filters-open");
+    setFiltersPanelState(!isOpen);
+  });
+}
