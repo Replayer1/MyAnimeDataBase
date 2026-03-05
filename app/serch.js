@@ -34,6 +34,10 @@ const filtersToggle = document.getElementById("filtersToggle");
 
 let selectedGenres = new Set();
 
+function getAnimeStatus(anime) {
+  return anime?.user_status || anime?.user_stauts || "";
+}
+
 function setFiltersPanelState(isOpen) {
   document.body.classList.toggle("filters-open", isOpen);
 
@@ -202,7 +206,7 @@ function initializeFilters(data) {
     syncYearRange("from");
   }
 
-  const statuses = uniqueValues(data, (anime) => anime.user_stauts).sort(
+  const statuses = uniqueValues(data, (anime) => getAnimeStatus(anime)).sort(
     (a, b) => a.localeCompare(b, "ru"),
   );
 
@@ -265,7 +269,7 @@ function applyAllFilters() {
         (Number.isNaN(userTo) || userScore <= userTo));
 
     const matchesStatus =
-      !selectedStatus || anime.user_stauts === selectedStatus;
+      !selectedStatus || getAnimeStatus(anime) === selectedStatus;
     const matchesType = !selectedType || anime.type === selectedType;
     const matchesGenre =
       selectedGenresList.length === 0 ||
