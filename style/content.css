@@ -124,6 +124,13 @@
   color: var(--text-color);
 }
 
+.anime-card__meta {
+  margin: 0 0 6px;
+  font-size: 11px;
+  line-height: 1.35;
+  color: var(--text-muted);
+}
+
 .anime-card__genres-text {
   display: block;
 }

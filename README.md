@@ -1,84 +1,98 @@
 # MyAnimeDataBase
 
-MyAnimeDataBase is a static web app for browsing a personal anime collection.
-It renders anime cards from local JSON data, supports advanced filtering, and provides quick links to detail and watch pages.
+MyAnimeDataBase is a web app for managing and browsing media entries with a unified model for anime and manga.
+The frontend is plain JavaScript, and the MVP backend uses Node.js + Express + SQLite for persistent storage and real CRUD operations.
 
 ## Features
 
-- Card grid with poster, scores, year, and genres
-- Search by Russian and original titles
-- Filters by year, Shiki score, user score, status, type, and multiple genres
-- Responsive pagination with mobile-friendly controls
-- Theme toggle (light/dark) persisted in localStorage
-- Safe external link opening for detail/watch actions
+- Unified `mediaItem` model with `media_type: "anime" | "manga"`
+- Backward-compatible status normalization: `user_status` + temporary `user_stauts`
+- Anime and manga tabs with shared UX: cards, search, filters, pagination
+- Common filters: title, year, scores, status, type, genres
+- Manga filters: chapters and volumes ranges
+- Statistics page with client-side charts and cached aggregates
+- Add page with manual/semi-auto mode, client validation and CRUD actions
+- Responsive pagination and theme toggle
+- REST API for listing, creating, editing, deleting + change journal
 
 ## Tech Stack
 
-- HTML5
-- CSS3
-- Vanilla JavaScript (no framework)
-- Local JSON database in `db/anime-data.json`
+- Frontend: HTML5, CSS3, Vanilla JavaScript
+- Backend: Node.js, Express
+- Database: SQLite
 
 ## Project Structure
 
 ```text
 .
 |- app/
-|  |- parse.js        # data loading and bootstrap
-|  |- render.js       # card rendering and action handlers
-|  |- serch.js        # search + filters logic
-|  |- pagination.js   # pagination logic
-|  `- theme.js        # theme switcher
+|  |- utils/
+|  |  |- media-item.js   # normalization helpers for mediaItem
+|  |  `- list-utils.js   # reusable filtering and pagination helpers
+|  |- parse.js           # data loading and bootstrap
+|  |- render.js          # card rendering and action handlers
+|  |- serch.js           # search + filters logic
+|  |- statistics.js      # statistics page, charts, aggregate cache
+|  |- add-item.js        # add/edit/delete page and validation
+|  |- pagination.js      # pagination UI logic
+|  `- theme.js           # theme switcher
 |- db/
-|  |- anime-data.json
-|  `- shikimori_data.json
+|  |- anime-data.json    # initial anime seed data
+|  `- manga-data.json    # initial manga seed data
+|- docs/
+|  `- data-model.md      # API contract and schema
+|- server/
+|  |- index.js           # Express app and API routes
+|  |- store.js           # SQLite storage layer
+|  |- external-source.js # external source adapter (URL/ID prefill)
+|  `- seed-migration.js  # raw seed migration to unified mediaItem
 |- style/
 |  |- index.css
 |  `- content.css
-`- index.html
+|- index.html
+`- package.json
 ```
 
 ## Run Locally
 
-Because the app uses `fetch()` for local JSON, run it with a local HTTP server.
-
-1. Open the project folder.
-2. Start a server:
+1. Install dependencies:
 
 ```bash
-python3 -m http.server 8000
+npm install
 ```
 
-3. Open:
+2. Start the app server:
+
+```bash
+npm start
+```
+
+3. Open in browser:
 
 ```text
-http://localhost:8000
+http://localhost:3000
 ```
+
+The backend serves static frontend files and API on the same origin.
+On first run, SQLite is created at `data/app.db` and seeded from `db/anime-data.json` + `db/manga-data.json`.
+
+## API Overview
+
+- `GET /api/health`
+- `GET /api/items`
+- `GET /api/items/:id`
+- `POST /api/items`
+- `PUT /api/items/:id`
+- `DELETE /api/items/:id`
+- `GET /api/change-log`
+- `GET /api/external/shiki?source=...&media_type=...`
+
+Aliases without `/api` are also available (for example, `POST /items`).
+
+Full contract: `docs/data-model.md`.
 
 ## Data Notes
 
-Current dataset uses the key `user_stauts` (legacy typo).
-The app supports both `user_stauts` and `user_status` for compatibility.
-
-Minimal record example:
-
-```json
-{
-  "id": 35557,
-  "title": "Houseki no Kuni",
-  "title_ru": "Land of the Lustrous",
-  "type": "tv",
-  "user_score": 10,
-  "shiki_score": "8.39",
-  "year": "2017",
-  "user_stauts": "completed",
-  "genres": ["Drama", "Fantasy"]
-}
-```
-
-## Future Improvements
-
-- Add dedicated anime details page
-- Add statistics page (planned in UI navigation)
-- Add tests for filtering and pagination behavior
-- Normalize data schema to `user_status`
+- Canonical status field: `user_status`
+- Legacy compatibility field: `user_stauts` (deprecated)
+- Frontend and backend accept both fields during transition

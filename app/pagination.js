@@ -3,12 +3,18 @@ const pageSize = 20; // карточек на странице
 const pagination = document.getElementById("pagination");
 
 function getPage(data, page) {
+  if (window.ListUtils?.paginateItems) {
+    return window.ListUtils.paginateItems(data, page, pageSize);
+  }
+
   const start = (page - 1) * pageSize;
   return data.slice(start, start + pageSize);
 }
 
 function renderPage(data) {
-  const totalPages = Math.max(1, Math.ceil(data.length / pageSize));
+  const totalPages = window.ListUtils?.getTotalPages
+    ? window.ListUtils.getTotalPages(data.length, pageSize)
+    : Math.max(1, Math.ceil(data.length / pageSize));
   currentPage = Math.min(Math.max(1, currentPage), totalPages);
 
   const pageData = getPage(data, currentPage);
@@ -17,11 +23,15 @@ function renderPage(data) {
 }
 
 function renderPagination(total) {
+  if (!pagination) return;
+
   pagination.innerHTML = "";
 
-  const totalPages = Math.ceil(total / pageSize);
+  const totalPages = window.ListUtils?.getTotalPages
+    ? window.ListUtils.getTotalPages(total, pageSize)
+    : Math.ceil(total / pageSize);
 
-  if (totalPages <= 0) {
+  if (total <= 0) {
     const empty = document.createElement("span");
     empty.className = "pagination-empty";
     empty.textContent = "Ничего не найдено";

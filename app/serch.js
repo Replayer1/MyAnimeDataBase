@@ -1,31 +1,41 @@
 const searchInput = document.getElementById("searchInput");
+const tabAnime = document.getElementById("tabAnime");
+const tabManga = document.getElementById("tabManga");
+
 const filterYearFrom = document.getElementById("filterYearFrom");
 const filterYearTo = document.getElementById("filterYearTo");
 const filterYearFromValue = document.getElementById("filterYearFromValue");
 const filterYearToValue = document.getElementById("filterYearToValue");
 const filterYearProgress = document.getElementById("filterYearProgress");
+
 const filterShikiScoreFrom = document.getElementById("filterShikiScoreFrom");
 const filterShikiScoreTo = document.getElementById("filterShikiScoreTo");
 const filterShikiScoreFromValue = document.getElementById(
   "filterShikiScoreFromValue",
 );
-const filterShikiScoreToValue = document.getElementById(
-  "filterShikiScoreToValue",
-);
-const filterShikiScoreProgress = document.getElementById(
-  "filterShikiScoreProgress",
-);
+const filterShikiScoreToValue = document.getElementById("filterShikiScoreToValue");
+const filterShikiScoreProgress = document.getElementById("filterShikiScoreProgress");
+
 const filterUserScoreFrom = document.getElementById("filterUserScoreFrom");
 const filterUserScoreTo = document.getElementById("filterUserScoreTo");
-const filterUserScoreFromValue = document.getElementById(
-  "filterUserScoreFromValue",
-);
-const filterUserScoreToValue = document.getElementById(
-  "filterUserScoreToValue",
-);
-const filterUserScoreProgress = document.getElementById(
-  "filterUserScoreProgress",
-);
+const filterUserScoreFromValue = document.getElementById("filterUserScoreFromValue");
+const filterUserScoreToValue = document.getElementById("filterUserScoreToValue");
+const filterUserScoreProgress = document.getElementById("filterUserScoreProgress");
+
+const filterChaptersField = document.getElementById("filterChaptersField");
+const filterChaptersFrom = document.getElementById("filterChaptersFrom");
+const filterChaptersTo = document.getElementById("filterChaptersTo");
+const filterChaptersFromValue = document.getElementById("filterChaptersFromValue");
+const filterChaptersToValue = document.getElementById("filterChaptersToValue");
+const filterChaptersProgress = document.getElementById("filterChaptersProgress");
+
+const filterVolumesField = document.getElementById("filterVolumesField");
+const filterVolumesFrom = document.getElementById("filterVolumesFrom");
+const filterVolumesTo = document.getElementById("filterVolumesTo");
+const filterVolumesFromValue = document.getElementById("filterVolumesFromValue");
+const filterVolumesToValue = document.getElementById("filterVolumesToValue");
+const filterVolumesProgress = document.getElementById("filterVolumesProgress");
+
 const filterStatus = document.getElementById("filterStatus");
 const filterType = document.getElementById("filterType");
 const filterGenre = document.getElementById("filterGenre");
@@ -34,8 +44,28 @@ const filtersToggle = document.getElementById("filtersToggle");
 
 let selectedGenres = new Set();
 
-function getAnimeStatus(anime) {
-  return anime?.user_status || anime?.user_stauts || "";
+function getItemStatus(item) {
+  if (window.MediaItemUtils?.getMediaStatus) {
+    return window.MediaItemUtils.getMediaStatus(item);
+  }
+
+  return String(item?.user_status || item?.user_stauts || "").toLowerCase();
+}
+
+function getItemMediaType(item) {
+  return String(item?.media_type || "anime").toLowerCase() === "manga"
+    ? "manga"
+    : "anime";
+}
+
+function getActiveMediaType() {
+  const active = String(window.catalogState?.activeMediaType || "anime").toLowerCase();
+  return active === "manga" ? "manga" : "anime";
+}
+
+function getScopedItems(data) {
+  const mediaType = getActiveMediaType();
+  return data.filter((item) => getItemMediaType(item) === mediaType);
 }
 
 function setFiltersPanelState(isOpen) {
@@ -49,6 +79,11 @@ function setFiltersPanelState(isOpen) {
     isOpen ? "Скрыть фильтры" : "Открыть фильтры",
   );
   filtersToggle.textContent = isOpen ? "▶" : "◀";
+}
+
+function toggleMangaFilters(isManga) {
+  if (filterChaptersField) filterChaptersField.hidden = !isManga;
+  if (filterVolumesField) filterVolumesField.hidden = !isManga;
 }
 
 function syncRangeValues(
@@ -101,18 +136,6 @@ function syncRangeValues(
   }
 }
 
-function syncShikiRange(active) {
-  syncRangeValues(
-    filterShikiScoreFrom,
-    filterShikiScoreTo,
-    filterShikiScoreFromValue,
-    filterShikiScoreToValue,
-    filterShikiScoreProgress,
-    1,
-    active,
-  );
-}
-
 function syncYearRange(active) {
   syncRangeValues(
     filterYearFrom,
@@ -121,6 +144,18 @@ function syncYearRange(active) {
     filterYearToValue,
     filterYearProgress,
     0,
+    active,
+  );
+}
+
+function syncShikiRange(active) {
+  syncRangeValues(
+    filterShikiScoreFrom,
+    filterShikiScoreTo,
+    filterShikiScoreFromValue,
+    filterShikiScoreToValue,
+    filterShikiScoreProgress,
+    1,
     active,
   );
 }
@@ -135,6 +170,45 @@ function syncUserRange(active) {
     0,
     active,
   );
+}
+
+function syncChaptersRange(active) {
+  syncRangeValues(
+    filterChaptersFrom,
+    filterChaptersTo,
+    filterChaptersFromValue,
+    filterChaptersToValue,
+    filterChaptersProgress,
+    0,
+    active,
+  );
+}
+
+function syncVolumesRange(active) {
+  syncRangeValues(
+    filterVolumesFrom,
+    filterVolumesTo,
+    filterVolumesFromValue,
+    filterVolumesToValue,
+    filterVolumesProgress,
+    0,
+    active,
+  );
+}
+
+function getNumericBounds(data, accessor, defaultMin, defaultMax) {
+  const values = data
+    .map((item) => Number.parseInt(String(accessor(item)), 10))
+    .filter((value) => Number.isFinite(value));
+
+  if (values.length === 0) {
+    return { min: defaultMin, max: defaultMax };
+  }
+
+  return {
+    min: Math.min(...values),
+    max: Math.max(...values),
+  };
 }
 
 function fillSelect(selectEl, values) {
@@ -187,37 +261,68 @@ function renderGenreCheckboxes(genres) {
 }
 
 function initializeFilters(data) {
-  const years = uniqueValues(data, (anime) => String(anime.year)).sort(
-    (a, b) => Number(b) - Number(a),
+  const scopedData = getScopedItems(Array.isArray(data) ? data : []);
+  const isManga = getActiveMediaType() === "manga";
+
+  toggleMangaFilters(isManga);
+  selectedGenres.clear();
+
+  const yearBounds = getNumericBounds(
+    scopedData,
+    (item) => item?.year,
+    1900,
+    new Date().getFullYear(),
   );
 
-  const minYear =
-    years.length > 0 ? Number.parseInt(years[years.length - 1], 10) : 1900;
-  const maxYear =
-    years.length > 0 ? Number.parseInt(years[0], 10) : new Date().getFullYear();
-
   if (filterYearFrom && filterYearTo) {
-    filterYearFrom.min = String(minYear);
-    filterYearFrom.max = String(maxYear);
-    filterYearTo.min = String(minYear);
-    filterYearTo.max = String(maxYear);
-    filterYearFrom.value = String(minYear);
-    filterYearTo.value = String(maxYear);
+    filterYearFrom.min = String(yearBounds.min);
+    filterYearFrom.max = String(yearBounds.max);
+    filterYearTo.min = String(yearBounds.min);
+    filterYearTo.max = String(yearBounds.max);
+    filterYearFrom.value = String(yearBounds.min);
+    filterYearTo.value = String(yearBounds.max);
     syncYearRange("from");
   }
 
-  const statuses = uniqueValues(data, (anime) => getAnimeStatus(anime)).sort(
-    (a, b) => a.localeCompare(b, "ru"),
-  );
+  const chapterBounds = getNumericBounds(scopedData, (item) => item?.chapters, 0, 5000);
+  if (filterChaptersFrom && filterChaptersTo) {
+    filterChaptersFrom.min = String(chapterBounds.min);
+    filterChaptersFrom.max = String(chapterBounds.max);
+    filterChaptersTo.min = String(chapterBounds.min);
+    filterChaptersTo.max = String(chapterBounds.max);
+    filterChaptersFrom.value = String(chapterBounds.min);
+    filterChaptersTo.value = String(chapterBounds.max);
+    syncChaptersRange("from");
+  }
 
-  const types = uniqueValues(data, (anime) => anime.type).sort((a, b) =>
+  const volumeBounds = getNumericBounds(scopedData, (item) => item?.volumes, 0, 200);
+  if (filterVolumesFrom && filterVolumesTo) {
+    filterVolumesFrom.min = String(volumeBounds.min);
+    filterVolumesFrom.max = String(volumeBounds.max);
+    filterVolumesTo.min = String(volumeBounds.min);
+    filterVolumesTo.max = String(volumeBounds.max);
+    filterVolumesFrom.value = String(volumeBounds.min);
+    filterVolumesTo.value = String(volumeBounds.max);
+    syncVolumesRange("from");
+  }
+
+  if (filterShikiScoreFrom) filterShikiScoreFrom.value = "0";
+  if (filterShikiScoreTo) filterShikiScoreTo.value = "10";
+  if (filterUserScoreFrom) filterUserScoreFrom.value = "0";
+  if (filterUserScoreTo) filterUserScoreTo.value = "10";
+  syncShikiRange("from");
+  syncUserRange("from");
+
+  const statuses = uniqueValues(scopedData, (item) => getItemStatus(item)).sort((a, b) =>
     a.localeCompare(b, "ru"),
   );
-
+  const types = uniqueValues(scopedData, (item) => item.type).sort((a, b) =>
+    a.localeCompare(b, "ru"),
+  );
   const genres = [
     ...new Set(
-      data
-        .flatMap((anime) => (Array.isArray(anime.genres) ? anime.genres : []))
+      scopedData
+        .flatMap((item) => (Array.isArray(item.genres) ? item.genres : []))
         .filter(Boolean),
     ),
   ].sort((a, b) => a.localeCompare(b, "ru"));
@@ -225,67 +330,125 @@ function initializeFilters(data) {
   fillSelect(filterStatus, statuses);
   fillSelect(filterType, types);
   renderGenreCheckboxes(genres);
+
+  if (filterStatus) filterStatus.value = "";
+  if (filterType) filterType.value = "";
+}
+
+function matchesRange(value, from, to) {
+  const numeric = Number.parseFloat(String(value));
+  const fromValue = from === "" ? null : Number.parseFloat(String(from));
+  const toValue = to === "" ? null : Number.parseFloat(String(to));
+
+  if (fromValue === null && toValue === null) return true;
+  if (Number.isNaN(numeric)) return false;
+  if (fromValue !== null && !Number.isNaN(fromValue) && numeric < fromValue) {
+    return false;
+  }
+  if (toValue !== null && !Number.isNaN(toValue) && numeric > toValue) {
+    return false;
+  }
+
+  return true;
+}
+
+function getRangeCriteria(fromEl, toEl) {
+  const fromValue = fromEl?.value ?? "";
+  const toValue = toEl?.value ?? "";
+  const minValue = fromEl?.min ?? "";
+  const maxValue = toEl?.max ?? "";
+
+  const isDefaultRange = fromValue === minValue && toValue === maxValue;
+  if (isDefaultRange) {
+    return { from: "", to: "" };
+  }
+
+  return {
+    from: fromValue,
+    to: toValue,
+  };
 }
 
 function applyAllFilters() {
   if (!Array.isArray(animeData)) return;
 
-  const query = searchInput?.value.toLowerCase().trim() || "";
-  const yearFrom = Number.parseInt(filterYearFrom?.value || "", 10);
-  const yearTo = Number.parseInt(filterYearTo?.value || "", 10);
-  const shikiFrom = Number.parseFloat(filterShikiScoreFrom?.value);
-  const shikiTo = Number.parseFloat(filterShikiScoreTo?.value);
-  const userFrom = Number.parseFloat(filterUserScoreFrom?.value);
-  const userTo = Number.parseFloat(filterUserScoreTo?.value);
+  const mediaType = getActiveMediaType();
+  const query = searchInput?.value || "";
+  const yearRange = getRangeCriteria(filterYearFrom, filterYearTo);
+  const shikiRange = getRangeCriteria(filterShikiScoreFrom, filterShikiScoreTo);
+  const userRange = getRangeCriteria(filterUserScoreFrom, filterUserScoreTo);
+  const chaptersRange = getRangeCriteria(filterChaptersFrom, filterChaptersTo);
+  const volumesRange = getRangeCriteria(filterVolumesFrom, filterVolumesTo);
+
+  const yearFrom = yearRange.from;
+  const yearTo = yearRange.to;
+  const shikiFrom = shikiRange.from;
+  const shikiTo = shikiRange.to;
+  const userFrom = userRange.from;
+  const userTo = userRange.to;
+  const chaptersFrom = chaptersRange.from;
+  const chaptersTo = chaptersRange.to;
+  const volumesFrom = volumesRange.from;
+  const volumesTo = volumesRange.to;
   const selectedStatus = filterStatus?.value || "";
   const selectedType = filterType?.value || "";
   const selectedGenresList = [...selectedGenres];
 
-  currentList = animeData.filter((anime) => {
-    const title = anime.title?.toLowerCase() || "";
-    const titleRu = anime.title_ru?.toLowerCase() || "";
-    const matchesSearch =
-      !query || title.includes(query) || titleRu.includes(query);
+  if (window.ListUtils?.filterMediaItems) {
+    currentList = window.ListUtils.filterMediaItems(animeData, {
+      query,
+      media_type: mediaType,
+      yearFrom,
+      yearTo,
+      shikiFrom,
+      shikiTo,
+      userFrom,
+      userTo,
+      chaptersFrom,
+      chaptersTo,
+      volumesFrom,
+      volumesTo,
+      status: selectedStatus,
+      type: selectedType,
+      genres: selectedGenresList,
+    });
+  } else {
+    currentList = animeData.filter((item) => {
+      const title = String(item?.title || "").toLowerCase();
+      const titleRu = String(item?.title_ru || "").toLowerCase();
+      const preparedQuery = query.toLowerCase().trim();
+      const matchesSearch =
+        !preparedQuery || title.includes(preparedQuery) || titleRu.includes(preparedQuery);
 
-    const animeYear = Number.parseInt(String(anime.year), 10);
-    const matchesYear =
-      (Number.isNaN(yearFrom) && Number.isNaN(yearTo)) ||
-      (!Number.isNaN(animeYear) &&
-        (Number.isNaN(yearFrom) || animeYear >= yearFrom) &&
-        (Number.isNaN(yearTo) || animeYear <= yearTo));
+      const matchesMediaType = getItemMediaType(item) === mediaType;
+      const matchesStatus = !selectedStatus || getItemStatus(item) === selectedStatus;
+      const matchesType = !selectedType || item.type === selectedType;
+      const matchesGenre =
+        selectedGenresList.length === 0 ||
+        (Array.isArray(item.genres) &&
+          selectedGenresList.every((genre) => item.genres.includes(genre)));
+      const matchesYear = matchesRange(item?.year, yearFrom, yearTo);
+      const matchesShiki = matchesRange(item?.shiki_score, shikiFrom, shikiTo);
+      const matchesUser = matchesRange(item?.user_score, userFrom, userTo);
+      const matchesChapters =
+        mediaType !== "manga" || matchesRange(item?.chapters, chaptersFrom, chaptersTo);
+      const matchesVolumes =
+        mediaType !== "manga" || matchesRange(item?.volumes, volumesFrom, volumesTo);
 
-    const shikiScore = Number.parseFloat(anime.shiki_score);
-    const matchesShiki =
-      (Number.isNaN(shikiFrom) && Number.isNaN(shikiTo)) ||
-      (!Number.isNaN(shikiScore) &&
-        (Number.isNaN(shikiFrom) || shikiScore >= shikiFrom) &&
-        (Number.isNaN(shikiTo) || shikiScore <= shikiTo));
-
-    const userScore = Number.parseFloat(anime.user_score);
-    const matchesUser =
-      (Number.isNaN(userFrom) && Number.isNaN(userTo)) ||
-      (!Number.isNaN(userScore) &&
-        (Number.isNaN(userFrom) || userScore >= userFrom) &&
-        (Number.isNaN(userTo) || userScore <= userTo));
-
-    const matchesStatus =
-      !selectedStatus || getAnimeStatus(anime) === selectedStatus;
-    const matchesType = !selectedType || anime.type === selectedType;
-    const matchesGenre =
-      selectedGenresList.length === 0 ||
-      (Array.isArray(anime.genres) &&
-        selectedGenresList.every((genre) => anime.genres.includes(genre)));
-
-    return (
-      matchesSearch &&
-      matchesYear &&
-      matchesShiki &&
-      matchesUser &&
-      matchesStatus &&
-      matchesType &&
-      matchesGenre
-    );
-  });
+      return (
+        matchesSearch &&
+        matchesMediaType &&
+        matchesYear &&
+        matchesShiki &&
+        matchesUser &&
+        matchesStatus &&
+        matchesType &&
+        matchesGenre &&
+        matchesChapters &&
+        matchesVolumes
+      );
+    });
+  }
 
   if (typeof currentPage !== "undefined") {
     currentPage = 1;
@@ -293,6 +456,38 @@ function applyAllFilters() {
 
   if (typeof renderPage === "function") {
     renderPage(currentList);
+  }
+}
+
+function setActiveMediaType(nextType) {
+  const mediaType = String(nextType || "anime").toLowerCase() === "manga" ? "manga" : "anime";
+
+  window.catalogState = window.catalogState || {
+    activeMediaType: "anime",
+    activePage: "catalog",
+    statsSlice: "all",
+  };
+
+  window.catalogState.activeMediaType = mediaType;
+  window.catalogState.activePage = "catalog";
+
+  if (tabAnime) {
+    tabAnime.classList.toggle("site-nav__link--active", mediaType === "anime");
+  }
+
+  if (tabManga) {
+    tabManga.classList.toggle("site-nav__link--active", mediaType === "manga");
+  }
+
+  if (searchInput) {
+    searchInput.placeholder = mediaType === "manga" ? "Поиск манги..." : "Поиск аниме...";
+  }
+
+  toggleMangaFilters(mediaType === "manga");
+
+  if (Array.isArray(animeData)) {
+    initializeFilters(animeData);
+    applyAllFilters();
   }
 }
 
@@ -311,6 +506,20 @@ const debouncedApplyAllFilters = debounce(applyAllFilters, 150);
 
 if (searchInput) {
   searchInput.addEventListener("input", debouncedApplyAllFilters);
+}
+
+if (tabAnime) {
+  tabAnime.addEventListener("click", (event) => {
+    event.preventDefault();
+    setActiveMediaType("anime");
+  });
+}
+
+if (tabManga) {
+  tabManga.addEventListener("click", (event) => {
+    event.preventDefault();
+    setActiveMediaType("manga");
+  });
 }
 
 if (filterYearFrom) {
@@ -355,6 +564,34 @@ if (filterUserScoreTo) {
   });
 }
 
+if (filterChaptersFrom) {
+  filterChaptersFrom.addEventListener("input", () => {
+    syncChaptersRange("from");
+    applyAllFilters();
+  });
+}
+
+if (filterChaptersTo) {
+  filterChaptersTo.addEventListener("input", () => {
+    syncChaptersRange("to");
+    applyAllFilters();
+  });
+}
+
+if (filterVolumesFrom) {
+  filterVolumesFrom.addEventListener("input", () => {
+    syncVolumesRange("from");
+    applyAllFilters();
+  });
+}
+
+if (filterVolumesTo) {
+  filterVolumesTo.addEventListener("input", () => {
+    syncVolumesRange("to");
+    applyAllFilters();
+  });
+}
+
 if (filterStatus) {
   filterStatus.addEventListener("change", applyAllFilters);
 }
@@ -382,16 +619,30 @@ if (filterGenre) {
 if (filtersResetBtn) {
   filtersResetBtn.addEventListener("click", () => {
     if (searchInput) searchInput.value = "";
+
     if (filterYearFrom && filterYearTo) {
       filterYearFrom.value = filterYearFrom.min || "1900";
       filterYearTo.value = filterYearTo.max || String(new Date().getFullYear());
     }
+
     if (filterShikiScoreFrom) filterShikiScoreFrom.value = "0";
     if (filterShikiScoreTo) filterShikiScoreTo.value = "10";
     if (filterUserScoreFrom) filterUserScoreFrom.value = "0";
     if (filterUserScoreTo) filterUserScoreTo.value = "10";
+
+    if (filterChaptersFrom && filterChaptersTo) {
+      filterChaptersFrom.value = filterChaptersFrom.min || "0";
+      filterChaptersTo.value = filterChaptersTo.max || "5000";
+    }
+
+    if (filterVolumesFrom && filterVolumesTo) {
+      filterVolumesFrom.value = filterVolumesFrom.min || "0";
+      filterVolumesTo.value = filterVolumesTo.max || "200";
+    }
+
     if (filterStatus) filterStatus.value = "";
     if (filterType) filterType.value = "";
+
     selectedGenres.clear();
 
     if (filterGenre) {
@@ -404,6 +655,8 @@ if (filtersResetBtn) {
     syncYearRange("from");
     syncShikiRange("from");
     syncUserRange("from");
+    syncChaptersRange("from");
+    syncVolumesRange("from");
 
     applyAllFilters();
   });
@@ -412,6 +665,9 @@ if (filtersResetBtn) {
 syncYearRange("from");
 syncShikiRange("from");
 syncUserRange("from");
+syncChaptersRange("from");
+syncVolumesRange("from");
+setActiveMediaType(getActiveMediaType());
 
 if (filtersToggle) {
   setFiltersPanelState(false);

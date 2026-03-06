@@ -32,15 +32,447 @@
     </header>
 
     <nav class="site-nav" aria-label="Навигация по разделам">
-      <a href="#" class="site-nav__link site-nav__link--active">Список аниме</a>
-      <a href="#" class="site-nav__link">Статистика</a>
-      <a href="#" class="site-nav__link">Добавить Аниме</a>
+      <a
+        href="#"
+        class="site-nav__link site-nav__link--active"
+        id="tabAnime"
+        data-media-type="anime"
+        >Аниме</a
+      >
+      <a href="#" class="site-nav__link" id="tabManga" data-media-type="manga"
+        >Манга</a
+      >
+      <a href="#" class="site-nav__link" id="tabStats">Статистика</a>
+      <a href="#" class="site-nav__link" id="tabAdd">Добавить</a>
     </nav>
 
     <main class="page-layout">
       <section class="content-area">
         <section class="content" id="content-container"></section>
         <div id="pagination"></div>
+
+        <section class="statistics-page" id="statisticsPage" hidden>
+          <header class="statistics-page__header">
+            <h2 class="statistics-page__title">Статистика библиотеки</h2>
+            <p class="statistics-page__subtitle">
+              Быстрый обзор коллекции по ключевым метрикам и динамике.
+            </p>
+          </header>
+
+          <div
+            class="statistics-slice-switch"
+            id="statsSliceSwitch"
+            role="group"
+            aria-label="Срез статистики"
+          >
+            <button
+              type="button"
+              class="statistics-slice-switch__btn statistics-slice-switch__btn--active"
+              data-stats-slice="all"
+            >
+              Все
+            </button>
+            <button
+              type="button"
+              class="statistics-slice-switch__btn"
+              data-stats-slice="anime"
+            >
+              Только аниме
+            </button>
+            <button
+              type="button"
+              class="statistics-slice-switch__btn"
+              data-stats-slice="manga"
+            >
+              Только манга
+            </button>
+          </div>
+
+          <section class="statistics-kpi-grid" aria-label="Ключевые показатели">
+            <article class="statistics-kpi-card">
+              <p class="statistics-kpi-card__label">Всего тайтлов</p>
+              <p class="statistics-kpi-card__value" id="statsTotalTitles">0</p>
+            </article>
+            <article class="statistics-kpi-card">
+              <p class="statistics-kpi-card__label">Средняя оценка пользователя</p>
+              <p class="statistics-kpi-card__value" id="statsAvgUserScore">-</p>
+            </article>
+            <article class="statistics-kpi-card">
+              <p class="statistics-kpi-card__label">Тайтлов с оценкой</p>
+              <p class="statistics-kpi-card__value" id="statsRatedTitles">0</p>
+            </article>
+          </section>
+
+          <section class="statistics-charts-grid" aria-label="Графики статистики">
+            <article class="statistics-chart-card">
+              <h3 class="statistics-chart-card__title">Распределение по статусам</h3>
+              <div class="statistics-chart-card__canvas-wrap">
+                <canvas id="statsStatusChart"></canvas>
+              </div>
+            </article>
+
+            <article class="statistics-chart-card">
+              <h3 class="statistics-chart-card__title">Распределение по годам</h3>
+              <div class="statistics-chart-card__canvas-wrap">
+                <canvas id="statsYearChart"></canvas>
+              </div>
+            </article>
+
+            <article class="statistics-chart-card statistics-chart-card--full">
+              <h3 class="statistics-chart-card__title">Топ-10 жанров</h3>
+              <div class="statistics-chart-card__canvas-wrap">
+                <canvas id="statsGenreChart"></canvas>
+              </div>
+            </article>
+          </section>
+
+          <p class="statistics-cache-info" id="statsCacheInfo"></p>
+        </section>
+
+        <section class="add-page" id="addPage" hidden>
+          <header class="add-page__header">
+            <h2 class="add-page__title">Добавление и редактирование тайтла</h2>
+            <p class="add-page__subtitle">
+              Выберите режим, заполните обязательные поля и сохраните запись.
+            </p>
+          </header>
+
+          <section class="add-page__guide" aria-label="Инструкция">
+            <h3 class="add-page__guide-title">Как пользоваться</h3>
+            <ol class="add-page__guide-list">
+              <li>Выберите режим: ручной ввод или полуавтоматическое заполнение по URL/ID.</li>
+              <li>Заполните минимум: ID, тип медиа и название.</li>
+              <li>Нажмите создать, обновить или удалить запись.</li>
+            </ol>
+          </section>
+
+          <div class="add-page__mode-switch" id="entryModeSwitch" role="group" aria-label="Режим ввода">
+            <button
+              type="button"
+              class="add-page__mode-btn add-page__mode-btn--active"
+              data-entry-mode="manual"
+            >
+              Ручной ввод
+            </button>
+            <button
+              type="button"
+              class="add-page__mode-btn"
+              data-entry-mode="semi"
+            >
+              Полуавтомат
+            </button>
+          </div>
+
+          <section class="add-page__prefill" id="externalPrefill" hidden>
+            <label class="add-page__field add-page__field--full">
+              <span
+                class="add-page__label add-page__label--hint"
+                data-hint="Вставьте ссылку на Shiki/Shikimori или просто числовой ID тайтла"
+                tabindex="0"
+                >URL или ID источника</span
+              >
+              <input
+                type="text"
+                id="externalSourceInput"
+                placeholder="Например: https://shiki.one/animes/5114... или 5114"
+              />
+            </label>
+
+            <label class="add-page__field">
+              <span
+                class="add-page__label add-page__label--hint"
+                data-hint="Если в URL не удалось определить тип, выберите его вручную"
+                tabindex="0"
+                >Подсказка типа</span
+              >
+              <select id="externalMediaTypeHint">
+                <option value="">Автоопределение</option>
+                <option value="anime">Аниме</option>
+                <option value="manga">Манга</option>
+              </select>
+            </label>
+
+            <button type="button" class="add-page__prefill-btn" id="externalPrefillBtn">
+              Подтянуть данные
+            </button>
+          </section>
+
+          <form class="add-page__form" id="itemForm" novalidate>
+            <p class="add-page__group-title add-page__field--full">Основная информация</p>
+
+            <label class="add-page__field">
+              <span
+                class="add-page__label add-page__label--hint"
+                data-hint="Уникальный числовой ID записи в вашей базе"
+                tabindex="0"
+                >ID записи *</span
+              >
+              <input type="number" id="itemId" min="1" step="1" required placeholder="Например: 35557" />
+            </label>
+
+            <label class="add-page__field">
+              <span
+                class="add-page__label add-page__label--hint"
+                data-hint="Определяет, в каком разделе будет отображаться тайтл"
+                tabindex="0"
+                >Раздел *</span
+              >
+              <select id="itemMediaType" required>
+                <option value="anime">Аниме</option>
+                <option value="manga">Манга</option>
+              </select>
+            </label>
+
+            <label class="add-page__field">
+              <span
+                class="add-page__label add-page__label--hint"
+                data-hint="Оригинальное название. Обязательно хотя бы одно из двух названий"
+                tabindex="0"
+                >Оригинальное название *</span
+              >
+              <input type="text" id="itemTitle" required placeholder="Например: Fullmetal Alchemist: Brotherhood" />
+            </label>
+
+            <label class="add-page__field">
+              <span
+                class="add-page__label add-page__label--hint"
+                data-hint="Локализованное название для удобного поиска"
+                tabindex="0"
+                >Русское название</span
+              >
+              <input type="text" id="itemTitleRu" placeholder="Например: Стальной алхимик: Братство" />
+            </label>
+
+            <label class="add-page__field">
+              <span
+                class="add-page__label add-page__label--hint"
+                data-hint="Формат тайтла: tv, movie, ova, manga, one_shot и т.д."
+                tabindex="0"
+                >Формат</span
+              >
+              <input type="text" id="itemType" list="itemTypeList" placeholder="Выберите или введите формат" />
+            </label>
+
+            <datalist id="itemTypeList">
+              <option value="tv"></option>
+              <option value="movie"></option>
+              <option value="ova"></option>
+              <option value="ona"></option>
+              <option value="special"></option>
+              <option value="manga"></option>
+              <option value="novel"></option>
+              <option value="one_shot"></option>
+            </datalist>
+
+            <label class="add-page__field">
+              <span
+                class="add-page__label add-page__label--hint"
+                data-hint="Текущий статус просмотра/чтения в вашей коллекции"
+                tabindex="0"
+                >Статус в коллекции</span
+              >
+              <select id="itemUserStatus">
+                <option value="planned">В планах (planned)</option>
+                <option value="watching">Смотрю (watching)</option>
+                <option value="reading">Читаю (reading)</option>
+                <option value="completed">Завершено (completed)</option>
+                <option value="on_hold">Пауза (on_hold)</option>
+                <option value="dropped">Брошено (dropped)</option>
+              </select>
+            </label>
+
+            <label class="add-page__field">
+              <span
+                class="add-page__label add-page__label--hint"
+                data-hint="Год выхода. Допустимый диапазон: 1900..2100"
+                tabindex="0"
+                >Год выхода</span
+              >
+              <input type="number" id="itemYear" min="1900" max="2100" step="1" placeholder="Например: 2024" />
+            </label>
+
+            <p class="add-page__group-title add-page__field--full">Оценки и объем</p>
+
+            <label class="add-page__field">
+              <span
+                class="add-page__label add-page__label--hint"
+                data-hint="Ваша личная оценка от 0 до 10"
+                tabindex="0"
+                >Моя оценка (0-10)</span
+              >
+              <input type="number" id="itemUserScore" min="0" max="10" step="0.1" placeholder="Например: 8.5" />
+            </label>
+
+            <label class="add-page__field">
+              <span
+                class="add-page__label add-page__label--hint"
+                data-hint="Оценка с внешнего источника от 0 до 10"
+                tabindex="0"
+                >Оценка Shiki (0-10)</span
+              >
+              <input type="number" id="itemShikiScore" min="0" max="10" step="0.1" placeholder="Например: 8.9" />
+            </label>
+
+            <label class="add-page__field">
+              <span
+                class="add-page__label add-page__label--hint"
+                data-hint="Количество эпизодов для аниме"
+                tabindex="0"
+                >Эпизоды</span
+              >
+              <input type="number" id="itemEpisodes" min="0" step="1" placeholder="Например: 12" />
+            </label>
+
+            <label class="add-page__field">
+              <span
+                class="add-page__label add-page__label--hint"
+                data-hint="Количество глав для манги"
+                tabindex="0"
+                >Главы</span
+              >
+              <input type="number" id="itemChapters" min="0" step="1" placeholder="Например: 105" />
+            </label>
+
+            <label class="add-page__field">
+              <span
+                class="add-page__label add-page__label--hint"
+                data-hint="Количество томов для манги"
+                tabindex="0"
+                >Тома</span
+              >
+              <input type="number" id="itemVolumes" min="0" step="1" placeholder="Например: 12" />
+            </label>
+
+            <label class="add-page__field">
+              <span
+                class="add-page__label add-page__label--hint"
+                data-hint="Статус выхода: publishing, finished, on_hiatus и т.д."
+                tabindex="0"
+                >Статус публикации</span
+              >
+              <input
+                type="text"
+                id="itemPublishingStatus"
+                list="publishingStatusList"
+                placeholder="Выберите или введите статус"
+              />
+            </label>
+
+            <datalist id="publishingStatusList">
+              <option value="publishing"></option>
+              <option value="finished"></option>
+              <option value="on_hiatus"></option>
+              <option value="announced"></option>
+            </datalist>
+
+            <p class="add-page__group-title add-page__field--full">Теги, связи и ссылки</p>
+
+            <label class="add-page__field add-page__field--full">
+              <span
+                class="add-page__label add-page__label--hint"
+                data-hint="Перечисляйте жанры через запятую: Экшен, Комедия, Драма"
+                tabindex="0"
+                >Жанры</span
+              >
+              <input type="text" id="itemGenres" placeholder="Экшен, Приключения, Фэнтези" />
+            </label>
+
+            <label class="add-page__field add-page__field--full">
+              <span
+                class="add-page__label add-page__label--hint"
+                data-hint="Для аниме: студии производства через запятую"
+                tabindex="0"
+                >Студии</span
+              >
+              <input type="text" id="itemStudios" placeholder="Madhouse, Bones" />
+            </label>
+
+            <label class="add-page__field add-page__field--full">
+              <span
+                class="add-page__label add-page__label--hint"
+                data-hint="Для манги: целевая аудитория/демография"
+                tabindex="0"
+                >Демография</span
+              >
+              <input type="text" id="itemDemographics" placeholder="Сёнен, Сэйнэн" />
+            </label>
+
+            <label class="add-page__field add-page__field--full">
+              <span
+                class="add-page__label add-page__label--hint"
+                data-hint="Авторы или мангаки через запятую"
+                tabindex="0"
+                >Авторы</span
+              >
+              <input type="text" id="itemAuthors" placeholder="Иноуэ Такэхико" />
+            </label>
+
+            <label class="add-page__field add-page__field--full">
+              <span
+                class="add-page__label add-page__label--hint"
+                data-hint="Ссылка на изображение постера. Можно относительный путь"
+                tabindex="0"
+                >Постер</span
+              >
+              <input type="text" id="itemPoster" placeholder="/system/animes/original/1.jpg" />
+            </label>
+
+            <label class="add-page__field add-page__field--full">
+              <span
+                class="add-page__label add-page__label--hint"
+                data-hint="Ссылка на страницу тайтла (детальная карточка)"
+                tabindex="0"
+                >Ссылка на детали</span
+              >
+              <input type="url" id="itemDetailUrl" placeholder="https://shiki.one/animes/1" />
+            </label>
+
+            <label class="add-page__field add-page__field--full">
+              <span
+                class="add-page__label add-page__label--hint"
+                data-hint="Ссылка для просмотра/чтения или поиска"
+                tabindex="0"
+                >Ссылка для просмотра/чтения</span
+              >
+              <input type="url" id="itemWatchUrl" placeholder="https://..." />
+            </label>
+
+            <label class="add-page__field add-page__field--full">
+              <span
+                class="add-page__label add-page__label--hint"
+                data-hint="Краткое описание тайтла"
+                tabindex="0"
+                >Описание</span
+              >
+              <textarea id="itemDescription" rows="5" placeholder="Кратко о сюжете и особенностях"></textarea>
+            </label>
+
+            <label class="add-page__field add-page__field--full">
+              <span
+                class="add-page__label add-page__label--hint"
+                data-hint="Комментарий попадет в журнал изменений и поможет понять причину правки"
+                tabindex="0"
+                >Комментарий к изменению</span
+              >
+              <input type="text" id="itemChangeReason" placeholder="Например: исправлена оценка и жанры" />
+            </label>
+          </form>
+
+          <div class="add-page__actions">
+            <button type="button" class="add-page__action add-page__action--ghost" id="loadItemByIdBtn">
+              Загрузить по ID
+            </button>
+            <button type="button" class="add-page__action" id="createItemBtn">Создать</button>
+            <button type="button" class="add-page__action add-page__action--secondary" id="updateItemBtn">
+              Обновить
+            </button>
+            <button type="button" class="add-page__action add-page__action--danger" id="deleteItemBtn">
+              Удалить
+            </button>
+          </div>
+
+          <p class="add-page__message" id="addPageMessage" role="status" aria-live="polite"></p>
+        </section>
       </section>
 
       <aside class="filters-sidebar" id="filtersSidebar" aria-label="Фильтры">
@@ -158,6 +590,80 @@
             </div>
           </label>
 
+          <label class="filters__field filters__field--manga" id="filterChaptersField" hidden>
+            <span class="filters__label">Главы (от — до)</span>
+            <div class="filters__range">
+              <div class="filters__range-values">
+                <span id="filterChaptersFromValue">0</span>
+                <span>—</span>
+                <span id="filterChaptersToValue">5000</span>
+              </div>
+              <div class="filters__range-slider" id="filterChaptersSlider">
+                <div
+                  class="filters__range-progress"
+                  id="filterChaptersProgress"
+                ></div>
+                <input
+                  type="range"
+                  class="filters__range-input filters__range-input--from"
+                  id="filterChaptersFrom"
+                  min="0"
+                  max="5000"
+                  step="1"
+                  value="0"
+                  aria-label="Главы от"
+                />
+                <input
+                  type="range"
+                  class="filters__range-input filters__range-input--to"
+                  id="filterChaptersTo"
+                  min="0"
+                  max="5000"
+                  step="1"
+                  value="5000"
+                  aria-label="Главы до"
+                />
+              </div>
+            </div>
+          </label>
+
+          <label class="filters__field filters__field--manga" id="filterVolumesField" hidden>
+            <span class="filters__label">Тома (от — до)</span>
+            <div class="filters__range">
+              <div class="filters__range-values">
+                <span id="filterVolumesFromValue">0</span>
+                <span>—</span>
+                <span id="filterVolumesToValue">200</span>
+              </div>
+              <div class="filters__range-slider" id="filterVolumesSlider">
+                <div
+                  class="filters__range-progress"
+                  id="filterVolumesProgress"
+                ></div>
+                <input
+                  type="range"
+                  class="filters__range-input filters__range-input--from"
+                  id="filterVolumesFrom"
+                  min="0"
+                  max="200"
+                  step="1"
+                  value="0"
+                  aria-label="Тома от"
+                />
+                <input
+                  type="range"
+                  class="filters__range-input filters__range-input--to"
+                  id="filterVolumesTo"
+                  min="0"
+                  max="200"
+                  step="1"
+                  value="200"
+                  aria-label="Тома до"
+                />
+              </div>
+            </div>
+          </label>
+
           <label class="filters__field">
             <span class="filters__label">Статус</span>
             <select id="filterStatus">
@@ -196,8 +702,13 @@
     <footer></footer>
   </body>
   <script src="app/theme.js"></script>
+  <script src="app/utils/media-item.js"></script>
+  <script src="app/utils/list-utils.js"></script>
   <script src="app/parse.js"></script>
   <script src="app/render.js"></script>
   <script src="app/serch.js"></script>
   <script src="app/pagination.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+  <script src="app/statistics.js"></script>
+  <script src="app/add-item.js"></script>
 </html>

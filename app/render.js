@@ -5,13 +5,23 @@ function asText(value, fallback = "") {
   return String(value);
 }
 
-function getAnimeStatus(anime) {
-  return asText(anime?.user_status || anime?.user_stauts, "");
+function getItemStatus(item) {
+  if (window.MediaItemUtils?.getMediaStatus) {
+    return window.MediaItemUtils.getMediaStatus(item);
+  }
+
+  return asText(item?.user_status || item?.user_stauts, "");
 }
 
-function getAnimeId(anime) {
-  const id = Number.parseInt(asText(anime?.id, ""), 10);
+function getItemId(item) {
+  const id = Number.parseInt(asText(item?.id, ""), 10);
   return Number.isNaN(id) ? null : id;
+}
+
+function getMediaType(item) {
+  return asText(item?.media_type, "anime").toLowerCase() === "manga"
+    ? "manga"
+    : "anime";
 }
 
 function getSafeUrl(url) {
@@ -29,6 +39,29 @@ function getSafeUrl(url) {
   return null;
 }
 
+function getPosterUrl(item) {
+  const poster = asText(item?.poster, "");
+  if (poster) {
+    if (poster.startsWith("http://") || poster.startsWith("https://")) {
+      return poster;
+    }
+
+    if (poster.startsWith("/")) {
+      return `https://shikimori.one${poster}`;
+    }
+
+    return poster;
+  }
+
+  const itemId = getItemId(item);
+  if (itemId !== null) {
+    const collection = getMediaType(item) === "manga" ? "mangas" : "animes";
+    return `https://shikimori.one/system/${collection}/original/${itemId}.jpg`;
+  }
+
+  return "https://shikimori.one/favicon.ico";
+}
+
 function slugify(title) {
   return asText(title)
     .toLowerCase()
@@ -39,36 +72,77 @@ function slugify(title) {
     .replace(/\s+/g, "-");
 }
 
-function getShikiLink(anime) {
-  const id = getAnimeId(anime);
-  if (id === null) return "https://shiki.one/animes";
+function getShikiLink(item) {
+  const id = getItemId(item);
+  const mediaType = getMediaType(item);
+  const collection = mediaType === "manga" ? "mangas" : "animes";
 
-  const slug = slugify(anime?.title || anime?.title_ru || "");
+  if (id === null) return `https://shiki.one/${collection}`;
+
+  const slug = slugify(item?.title || item?.title_ru || "");
   return slug
-    ? `https://shiki.one/animes/${id}-${slug}`
-    : `https://shiki.one/animes/${id}`;
+    ? `https://shiki.one/${collection}/${id}-${slug}`
+    : `https://shiki.one/${collection}/${id}`;
 }
 
-function getWatchLink(anime) {
-  const titleRu = asText(anime?.title_ru, "").trim();
-  const query = titleRu ? `Смотреть аниме ${titleRu}` : "Смотреть аниме";
+function getWatchLink(item) {
+  const titleRu = asText(item?.title_ru, asText(item?.title, "")).trim();
+  const mediaType = getMediaType(item);
+  const query =
+    mediaType === "manga"
+      ? titleRu
+        ? `Читать мангу ${titleRu}`
+        : "Читать мангу"
+      : titleRu
+        ? `Смотреть аниме ${titleRu}`
+        : "Смотреть аниме";
+
   return `https://www.google.com/search?q=${encodeURIComponent(query)}`;
+}
+
+function renderMetaLine(label, value) {
+  const safeValue = asText(value, "").trim();
+  return `${label}: ${safeValue ? safeValue.replaceAll("_", " ") : "-"}`;
+}
+
+function getMangaMeta(item) {
+  const demographics = Array.isArray(item?.demographics)
+    ? item.demographics.join(", ")
+    : "";
+  const authors = Array.isArray(item?.authors) ? item.authors.join(", ") : "";
+
+  return [
+    renderMetaLine("Главы", item?.chapters),
+    renderMetaLine("Тома", item?.volumes),
+    renderMetaLine("Публикация", item?.publishing_status),
+    renderMetaLine("Демография", demographics),
+    renderMetaLine("Авторы", authors),
+  ];
+}
+
+function getAnimeMeta(item) {
+  const studios = Array.isArray(item?.studios) ? item.studios.join(", ") : "";
+
+  return [
+    renderMetaLine("Эпизоды", item?.episodes),
+    renderMetaLine("Студии", studios),
+  ];
 }
 
 function createAnimeCard(anime) {
   const statusColors = {
     completed: "#34e062",
+    reading: "#34e062",
     watching: "#803fbc",
+    on_hold: "#f59e0b",
     dropped: "#f44336",
     planned: "#2196f3",
   };
 
-  const statusColor = statusColors[getAnimeStatus(anime)] || "#999";
+  const statusColor = statusColors[getItemStatus(anime)] || "#999";
   const animeGenres = Array.isArray(anime?.genres) ? anime.genres : [];
   const visibleGenres = animeGenres.slice(0, 4);
   const hiddenGenres = animeGenres.slice(visibleGenres.length);
-  const animeId = getAnimeId(anime);
-
   const card = document.createElement("div");
   card.className = "anime-card";
   card.style.setProperty("--anime-status-color", statusColor);
@@ -79,13 +153,9 @@ function createAnimeCard(anime) {
   const image = document.createElement("img");
   image.className = "anime-card__image";
   image.loading = "lazy";
-  image.alt = asText(anime?.title_ru, asText(anime?.title, "Аниме"));
+  image.alt = asText(anime?.title_ru, asText(anime?.title, "Тайтл"));
 
-  const imageUrl =
-    animeId !== null
-      ? `https://shikimori.one/system/animes/original/${animeId}.jpg`
-      : "https://shikimori.one/favicon.ico";
-  image.src = imageUrl;
+  image.src = getPosterUrl(anime);
 
   const rating = document.createElement("div");
   rating.className = "anime-card__rating";
@@ -155,15 +225,24 @@ function createAnimeCard(anime) {
 
   const year = document.createElement("span");
   year.className = "anime-card__year";
-  year.textContent = asText(anime?.year, "-");
+  const mediaType = getMediaType(anime);
+  const type = asText(anime?.type, "-");
+  year.textContent = `${asText(anime?.year, "-")} • ${type}`;
   typeYear.appendChild(year);
+
+  const meta = document.createElement("p");
+  meta.className = "anime-card__meta";
+  const lines = mediaType === "manga" ? getMangaMeta(anime) : getAnimeMeta(anime);
+  meta.textContent = lines.join(" | ");
 
   const description = document.createElement("p");
   description.className = "anime-card__description";
+  description.textContent = asText(anime?.description, "");
 
   info.appendChild(title);
   info.appendChild(genres);
   info.appendChild(typeYear);
+  info.appendChild(meta);
   info.appendChild(description);
 
   const actions = document.createElement("div");
@@ -181,7 +260,7 @@ function createAnimeCard(anime) {
   const watchBtn = document.createElement("button");
   watchBtn.type = "button";
   watchBtn.className = "btn btn--watch";
-  watchBtn.textContent = "Смотреть";
+  watchBtn.textContent = mediaType === "manga" ? "Читать" : "Смотреть";
   watchBtn.addEventListener("click", () => {
     const watchUrl = getSafeUrl(anime?.watchUrl) || getWatchLink(anime);
     window.open(watchUrl, "_blank", "noopener,noreferrer");

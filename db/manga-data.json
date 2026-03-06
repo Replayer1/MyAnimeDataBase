@@ -1,0 +1,21 @@
+[
+  {
+    "id": 13,
+    "title": "One Piece",
+    "title_ru": "Ван-Пис",
+    "type": "manga",
+    "user_score": 10,
+    "shiki_score": 9.22,
+    "chapters": 1110,
+    "volumes": 108,
+    "year": 1997,
+    "user_status": "reading",
+    "publishing_status": "publishing",
+    "demographics": ["Сёнен"],
+    "authors": ["Ода Эйитиро"],
+    "genres": ["Экшен", "Приключения", "Фэнтези", "Комедия"],
+    "poster": "/system/mangas/original/13.jpg",
+    "description": "История о великом путешествии Луффи и его команды в поисках легендарного сокровища.",
+    "detail_url": "https://shiki.one/mangas/13-one-piece"
+  }
+]
